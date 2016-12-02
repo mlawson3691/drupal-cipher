@@ -78,10 +78,17 @@ function cipher_form_submit($form, &$form_state) {
     foreach($inputted_chars as $char) {
         if (ord($char) >= 97 && ord($char) <= 122) {
             if ($shift_direction == 'right') {
-                $output .= chr(ord($char) + $shift_value);
+                $new_ascii = ord($char) + $shift_value;
             } else {
-                $output .= chr(ord($char) - $shift_value);
+                $new_ascii = ord($char) - $shift_value;
             }
+            while ($new_ascii > 122) {
+                $new_ascii -= 26;
+            }
+            while ($new_ascii < 97) {
+                $new_ascii += 26;
+            }
+            $output .= chr($new_ascii);
         } else {
             $output .= $char;
         }
