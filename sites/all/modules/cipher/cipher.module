@@ -1,5 +1,6 @@
 <?php
 
+// Menu hook
 function cipher_menu() {
     $items['cipher'] = array(
         'title' => 'Shift Cipher',
@@ -9,14 +10,29 @@ function cipher_menu() {
         'type' => MENU_NORMAL_ITEM,
     );
     $items['cipher_results_page'] = array(
-        'title' => 'Results',
+        'title' => 'Cipher Results',
         'page callback' => 'cipher_results',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    $items['decode_cipher_page'] = array(
+        'title' => 'Decode A Cipher',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('decode_form'),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['decode_results_page'] = array(
+        'title' => 'Decoded Results',
+        'page callback' => 'decode_results',
         'access callback' => TRUE,
         'type' => MENU_CALLBACK,
     );
     return $items;
 }
 
+
+// Cipher form
 function cipher_form() {
     $form['shift_value'] = array(
         '#title' => 'Shift Value',
@@ -46,6 +62,66 @@ function cipher_form() {
     return $form;
 }
 
+function cipher_form_submit($form, &$form_state) {
+    $shift_value = $form_state['values']['shift_value'];
+    $shift_direction = $form_state['values']['shift_direction'];
+    $text = strtolower($form_state['values']['text']);
+
+    $_SESSION['cipher'] = cipher($shift_value, $shift_direction, $text);
+
+    $_SESSION['shift_value'] = $shift_value;
+    $_SESSION['shift_direction'] = $shift_direction;
+    $form_state['redirect'] = 'cipher_results_page';
+}
+
+function cipher_results() {
+    return '
+        <p>Encryption Successful!</p>
+        <p>Your cipher is: <em>' . $_SESSION['cipher'] . '</em></p>'
+    ;
+}
+
+
+// Decode form
+function decode_form() {
+    $form['text'] = array(
+        '#title' => 'Text to Decode',
+        '#type' => 'textfield',
+        '#description' => 'Enter the text you would like to decode, based on your last cipher',
+        '#required' => TRUE,
+        '#element_validate' => array('element_validate_invalid_characters'),
+    );
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Decode',
+    );
+    return $form;
+}
+
+function decode_form_submit($form, &$form_state) {
+    $shift_value = $_SESSION['shift_value'];
+    $shift_direction = $_SESSION['shift_direction'];
+    if ($shift_direction == 'right') {
+        $shift_direction = 'left';
+    } else {
+        $shift_direction = 'right';
+    }
+    $text = strtolower($form_state['values']['text']);
+
+    $_SESSION['decoded_text'] = cipher($shift_value, $shift_direction, $text);
+
+    $form_state['redirect'] = 'decode_results_page';
+}
+
+function decode_results() {
+    return '
+        <p>Decoding Successful!</p>
+        <p>Your result is: <em>' . $_SESSION['decoded_text'] . '</em></p>'
+    ;
+}
+
+
+// Form validation
 function element_validate_shift_direction($element) {
     $direction = strtolower($element['#value']);
     if ($direction != 'right' && $direction != 'left') {
@@ -68,19 +144,19 @@ function element_validate_invalid_characters($element) {
     }
 }
 
-function cipher_form_submit($form, &$form_state) {
-    $shift_value = $form_state['values']['shift_value'];
-    $shift_direction = $form_state['values']['shift_direction'];
-    $text = strtolower($form_state['values']['text']);
+// Cipher Logic
+
+function cipher($shift_value, $shift_direction, $text) {
     $inputted_chars = str_split($text);
     $output = '';
 
     foreach($inputted_chars as $char) {
-        if (ord($char) >= 97 && ord($char) <= 122) {
+        $old_ascii = ord($char);
+        if ($old_ascii >= 97 && $old_ascii <= 122) {
             if ($shift_direction == 'right') {
-                $new_ascii = ord($char) + $shift_value;
+                $new_ascii = $old_ascii + $shift_value;
             } else {
-                $new_ascii = ord($char) - $shift_value;
+                $new_ascii = $old_ascii - $shift_value;
             }
             while ($new_ascii > 122) {
                 $new_ascii -= 26;
@@ -93,10 +169,6 @@ function cipher_form_submit($form, &$form_state) {
             $output .= $char;
         }
     }
-    $_SESSION['cipher'] = $output;
-    $form_state['redirect'] = 'cipher_results_page';
-}
 
-function cipher_results() {
-    return 'Success! Your cipher is: ' . $_SESSION['cipher'];
+    return $output;
 }
