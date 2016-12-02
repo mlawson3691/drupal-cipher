@@ -23,24 +23,49 @@ function cipher_form() {
         '#type' => 'textfield',
         '#description' => 'Enter the number of places to shift each letter',
         '#required' => TRUE,
+        '#element_validate' => array('element_validate_integer_positive'),
     );
     $form['shift_direction'] = array(
         '#title' => 'Shift Direction',
         '#type' => 'textfield',
         '#description' => 'Choose a direction to shift: right or left',
         '#required' => TRUE,
+        '#element_validate' => array('element_validate_shift_direction'),
     );
     $form['text'] = array(
         '#title' => 'Text to Encrypt',
         '#type' => 'textfield',
         '#description' => 'Enter the text you would like to encrypt',
         '#required' => TRUE,
+        '#element_validate' => array('element_validate_invalid_characters'),
     );
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => 'Encrypt',
     );
     return $form;
+}
+
+function element_validate_shift_direction($element) {
+    $direction = strtolower($element['#value']);
+    if ($direction != 'right' && $direction != 'left') {
+        form_error($element, t('Shift Direction must be "right" or "left"'));
+    }
+}
+
+function element_validate_invalid_characters($element) {
+    $valid_chars = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','.',',','?','!');
+    $text = strtolower($element['#value']);
+    $inputted_chars = str_split($text);
+    $invalid = false;
+    foreach($inputted_chars as $char) {
+        if (!in_array($char, $valid_chars)) {
+            $invalid = true;
+        }
+    }
+    if ($invalid == true) {
+        form_error($element, t('You may only include alphabetical characters and basic punctuation (. , ! ?)'));
+    }
 }
 
 function cipher_form_submit($form, &$form_state) {
