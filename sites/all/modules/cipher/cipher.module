@@ -37,15 +37,13 @@ function cipher_form() {
     $form['shift_value'] = array(
         '#title' => 'Shift Value',
         '#type' => 'textfield',
-        '#description' => 'Enter the number of places to shift each letter',
-        '#required' => TRUE,
+        '#description' => 'Enter the number of places to shift each letter OR leave blank for random shift',
         '#element_validate' => array('element_validate_integer_positive'),
     );
     $form['shift_direction'] = array(
         '#title' => 'Shift Direction',
         '#type' => 'textfield',
-        '#description' => 'Choose a direction to shift: right or left',
-        '#required' => TRUE,
+        '#description' => 'Choose a direction to shift: right or left OR leave blank for random direction',
         '#element_validate' => array('element_validate_shift_direction'),
     );
     $form['text'] = array(
@@ -64,7 +62,18 @@ function cipher_form() {
 
 function cipher_form_submit($form, &$form_state) {
     $shift_value = $form_state['values']['shift_value'];
+    if ($shift_value == '') {
+        $shift_value = rand(1,25);
+    }
     $shift_direction = $form_state['values']['shift_direction'];
+    if ($shift_direction == '') {
+        $random = rand(0,1);
+        if ($random == 0) {
+            $shift_direction = 'left';
+        } else {
+            $shift_direction = 'right';
+        }
+    }
     $text = strtolower($form_state['values']['text']);
 
     $_SESSION['cipher'] = cipher($shift_value, $shift_direction, $text);
@@ -124,7 +133,7 @@ function decode_results() {
 // Form validation
 function element_validate_shift_direction($element) {
     $direction = strtolower($element['#value']);
-    if ($direction != 'right' && $direction != 'left') {
+    if ($direction != 'right' && $direction != 'left' && $direction != '') {
         form_error($element, t('Shift Direction must be "right" or "left"'));
     }
 }
