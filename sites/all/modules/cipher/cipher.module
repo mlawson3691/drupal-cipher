@@ -18,7 +18,24 @@ function cipher_menu() {
 }
 
 function cipher_form() {
-    $form[''] = array();
+    $form['shift_value'] = array(
+        '#title' => 'Shift Value',
+        '#type' => 'textfield',
+        '#description' => 'Enter the number of places to shift each letter',
+        '#required' => TRUE,
+    );
+    $form['shift_direction'] = array(
+        '#title' => 'Shift Direction',
+        '#type' => 'textfield',
+        '#description' => 'Choose a direction to shift: right or left',
+        '#required' => TRUE,
+    );
+    $form['text'] = array(
+        '#title' => 'Text to Encrypt',
+        '#type' => 'textfield',
+        '#description' => 'Enter the text you would like to encrypt',
+        '#required' => TRUE,
+    );
     $form['submit'] = array(
         '#type' => 'submit',
         '#value' => 'Encrypt',
