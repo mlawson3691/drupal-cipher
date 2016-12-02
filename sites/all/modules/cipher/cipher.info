@@ -1,0 +1,5 @@
+name = Shift Cipher
+description = A cipher for encrypting text.
+package = Custom Modules
+core = 7.x
+files[] = cipher.module
