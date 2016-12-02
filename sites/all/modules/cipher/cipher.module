@@ -54,7 +54,7 @@ function element_validate_shift_direction($element) {
 }
 
 function element_validate_invalid_characters($element) {
-    $valid_chars = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','.',',','?','!');
+    $valid_chars = array('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','.',',','?','!',' ');
     $text = strtolower($element['#value']);
     $inputted_chars = str_split($text);
     $invalid = false;
@@ -64,14 +64,32 @@ function element_validate_invalid_characters($element) {
         }
     }
     if ($invalid == true) {
-        form_error($element, t('You may only include alphabetical characters and basic punctuation (. , ! ?)'));
+        form_error($element, t('You may only include alphabetical characters, spaces, and basic punctuation (. , ! ?)'));
     }
 }
 
 function cipher_form_submit($form, &$form_state) {
+    $shift_value = $form_state['values']['shift_value'];
+    $shift_direction = $form_state['values']['shift_direction'];
+    $text = strtolower($form_state['values']['text']);
+    $inputted_chars = str_split($text);
+    $output = '';
+
+    foreach($inputted_chars as $char) {
+        if (ord($char) >= 97 && ord($char) <= 122) {
+            if ($shift_direction == 'right') {
+                $output .= chr(ord($char) + $shift_value);
+            } else {
+                $output .= chr(ord($char) - $shift_value);
+            }
+        } else {
+            $output .= $char;
+        }
+    }
+    $_SESSION['cipher'] = $output;
     $form_state['redirect'] = 'cipher_results_page';
 }
 
 function cipher_results() {
-    return 'Success!';
+    return 'Success! Your cipher is: ' . $_SESSION['cipher'];
 }
