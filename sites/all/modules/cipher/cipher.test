@@ -1,0 +1,107 @@
+<?php
+
+class CipherFunctionalTests extends DrupalWebTestCase {
+
+    public static function getInfo() {
+        return array(
+            'name' => 'Cipher Functional Tests',
+            'description' => 'Functional tests for the Cipher module.',
+            'group' => 'Custom Tests',
+        );
+    }
+
+    public function setUp() {
+        parent::setUp(array('cipher'));
+    }
+
+    public function testCipher() {
+        $edit['shift_value'] = '1';
+        $edit['shift_direction'] = 'left';
+        $edit['text'] = 'dog';
+
+        $this->drupalPost('cipher', $edit, t('Encrypt'));
+        $this->assertText(t('Your cipher is: cnf'));
+    }
+
+    public function testCipherInvalidDirection() {
+        $edit['shift_value'] = '1';
+        $edit['shift_direction'] = 'dog';
+        $edit['text'] = 'dog';
+
+        $this->drupalPost('cipher', $edit, t('Encrypt'));
+        $this->assertText(t('Shift Direction must be "right" or "left"'));
+    }
+
+    public function testCipherInvalidValue() {
+        $edit['shift_value'] = 'dog';
+        $edit['shift_direction'] = 'left';
+        $edit['text'] = 'dog';
+
+        $this->drupalPost('cipher', $edit, t('Encrypt'));
+        $this->assertText(t('Shift Value must be a positive integer.'));
+    }
+
+    public function testCipherInvalidText() {
+        $edit['shift_value'] = 'dog';
+        $edit['shift_direction'] = 'left';
+        $edit['text'] = 'dog*';
+
+        $this->drupalPost('cipher', $edit, t('Encrypt'));
+        $this->assertText(t('You may only include alphabetical characters, spaces, and basic punctuation (. , ! ?)'));
+    }
+
+    public function testCipherDecrypt() {
+        $edit['shift_value'] = '1';
+        $edit['shift_direction'] = 'left';
+        $edit['text'] = 'dog';
+        $this->drupalPost('cipher', $edit, t('Encrypt'));
+
+        $edit2['text'] = 'cnf';
+        $this->drupalPost('decode_cipher_page', $edit2, t('Decode'));
+        $this->assertText(t('Your result is: dog'));
+    }
+
+    public function testCipherRandom() {
+        $edit['text'] = 'dog';
+
+        $this->drupalPost('cipher', $edit, t('Encrypt'));
+        $this->assertText(t('Your cipher is:'));
+    }
+}
+
+class CipherUnitTests extends DrupalUnitTestCase {
+
+    public static function getInfo() {
+        return array(
+            'name' => 'Cipher Unit Tests',
+            'description' => 'Unit Tests for the Cipher Module.',
+            'group' => 'Custom Tests',
+        );
+    }
+
+    function testCipher() {
+        $description = 'Successfully encrypt 1 word';
+        $shift_value = '1';
+        $shift_direction = 'left';
+        $text = 'dog';
+        $output = cipher($shift_value, $shift_direction, $text);
+        $expected_output = 'cnf';
+        $this->assertEqual($output, $expected_output, $description);
+
+        $description = 'Successfully encrypt with spaces and punctuation';
+        $shift_value = '1';
+        $shift_direction = 'left';
+        $text = 'dog dog!';
+        $output = cipher($shift_value, $shift_direction, $text);
+        $expected_output = 'cnf cnf!';
+        $this->assertEqual($output, $expected_output, $description);
+
+        $description = 'Successfully encrypt beyond bounds of alphabet';
+        $shift_value = '27';
+        $shift_direction = 'left';
+        $text = 'dog dog!';
+        $output = cipher($shift_value, $shift_direction, $text);
+        $expected_output = 'cnf cnf!';
+        $this->assertEqual($output, $expected_output, $description);
+    }
+}
